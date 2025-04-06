@@ -47,6 +47,17 @@
             <ion-select-option value="通訊模組">通訊模組</ion-select-option>
           </ion-select>
         </ion-item>
+        <ion-item lines="none">
+          <ion-label>標籤</ion-label>
+          <ion-select id="tagSelect" interface="popover" multiple="true" placeholder="選擇標籤（可多選）">
+            <ion-select-option value="Wi-Fi">Wi-Fi</ion-select-option>
+            <ion-select-option value="藍牙">藍牙</ion-select-option>
+            <ion-select-option value="低功耗">低功耗</ion-select-option>
+            <ion-select-option value="溫濕度">溫濕度</ion-select-option>
+            <ion-select-option value="測距">測距</ion-select-option>
+            <ion-select-option value="長距離">長距離</ion-select-option>
+          </ion-select>
+        </ion-item>
       </ion-header>
 
       <ion-content>
@@ -106,6 +117,7 @@
               <iframe class="item-video" src="${item.videoUrl}" frameborder="0" allowfullscreen></iframe>
               <div class="tag-container">
                 <ion-chip size="small">${item.type}</ion-chip>
+                ${item.features.split("，").map(feature => `<ion-chip size="small">${feature.trim()}</ion-chip>`).join("")}
               </div>
             </div>
           `;
@@ -133,21 +145,27 @@
       const filterController = {
         searchBar: null,
         categorySelect: null,
+        tagSelect: null,
 
         init() {
           this.searchBar = document.querySelector("ion-searchbar");
           this.categorySelect = document.querySelector("ion-select");
-          if (!this.searchBar || !this.categorySelect) throw new Error("搜尋或分類元件初始化失敗");
+          this.tagSelect = document.querySelector("#tagSelect");
+          if (!this.searchBar || !this.categorySelect || !this.tagSelect) 
+            throw new Error("搜尋、分類或標籤元件初始化失敗");
           hardwareData.filteredItems = [...hardwareData.items];
         },
 
-        filterItems(query = "", categories = []) {
+        filterItems(query = "", categories = [], tags = []) {
           return hardwareData.items.filter((item) => {
             const matchesSearch =
               item.name.toLowerCase().includes(query.toLowerCase()) ||
               item.features.toLowerCase().includes(query.toLowerCase());
             const matchesCategory = categories.length > 0 ? categories.includes(item.type) : true;
-            return matchesSearch && matchesCategory;
+            const matchesTags = tags.length > 0 
+              ? tags.every(tag => item.features.toLowerCase().includes(tag.toLowerCase())) 
+              : true;
+            return matchesSearch && matchesCategory && matchesTags;
           });
         },
 
@@ -155,14 +173,24 @@
           this.searchBar.addEventListener("ionInput", (event) => {
             const query = event.target.value || "";
             const categories = this.categorySelect.value || [];
-            hardwareData.filteredItems = this.filterItems(query, categories);
+            const tags = this.tagSelect.value || [];
+            hardwareData.filteredItems = this.filterItems(query, categories, tags);
             uiController.updateList(hardwareData.filteredItems);
           });
 
           this.categorySelect.addEventListener("ionChange", (event) => {
             const categories = event.target.value || [];
             const query = this.searchBar.value || "";
-            hardwareData.filteredItems = this.filterItems(query, categories);
+            const tags = this.tagSelect.value || [];
+            hardwareData.filteredItems = this.filterItems(query, categories, tags);
+            uiController.updateList(hardwareData.filteredItems);
+          });
+
+          this.tagSelect.addEventListener("ionChange", (event) => {
+            const tags = event.target.value || [];
+            const query = this.searchBar.value || "";
+            const categories = this.categorySelect.value || [];
+            hardwareData.filteredItems = this.filterItems(query, categories, tags);
             uiController.updateList(hardwareData.filteredItems);
           });
         },
