@@ -8,6 +8,8 @@
     <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
     <script src="https://unpkg.com/ionicons@latest/dist/ionicons.js"></script>
+    <!-- 添加 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       ion-card { 
         margin: 1rem; 
@@ -54,13 +56,11 @@
         to { opacity: 1; transform: translateY(0); } 
       }
       .sort-direction { display: flex; gap: 1rem; margin-left: 1rem; }
-      /* 列表視圖樣式 */
       #hardwareList.list-view ion-card { 
         width: 100%; 
         max-width: 600px; 
         margin: 1rem auto; 
       }
-      /* 網格視圖樣式 */
       #hardwareList.grid-view { 
         display: grid; 
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
@@ -68,8 +68,13 @@
         padding: 1rem; 
       }
       #hardwareList.grid-view ion-card { margin: 0; }
-      /* 切換按鈕樣式 */
       .view-toggle { margin-left: auto; padding-right: 1rem; }
+      /* 統計圖表樣式 */
+      #statsChartContainer {
+        padding: 1rem;
+        max-width: 600px;
+        margin: 0 auto 1rem auto;
+      }
     </style>
   </head>
   <body>
@@ -130,6 +135,10 @@
 
       <ion-content>
         <div id="hardwareList" class="list-view"></div>
+        <!-- 將統計圖表移動到產品列表下方 -->
+        <div id="statsChartContainer">
+          <canvas id="statsChart"></canvas>
+        </div>
       </ion-content>
     </ion-app>
 
@@ -162,10 +171,54 @@
 
       const uiController = {
         hardwareList: null,
+        chart: null,
 
         init() {
           this.hardwareList = document.querySelector("#hardwareList");
           if (!this.hardwareList) throw new Error("無法找到 hardwareList 元素");
+          this.initChart();
+        },
+
+        initChart() {
+          const ctx = document.getElementById('statsChart').getContext('2d');
+          const typeStats = this.calculateTypeStats(hardwareData.items);
+          
+          this.chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+              labels: Object.keys(typeStats),
+              datasets: [{
+                data: Object.values(typeStats),
+                backgroundColor: ['#2a7de1', '#ff6384', '#36a2eb'],
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: '硬體類型分佈'
+                }
+              }
+            }
+          });
+        },
+
+        calculateTypeStats(items) {
+          return items.reduce((acc, item) => {
+            acc[item.type] = (acc[item.type] || 0) + 1;
+            return acc;
+          }, {});
+        },
+
+        updateChart(items) {
+          const typeStats = this.calculateTypeStats(items);
+          this.chart.data.labels = Object.keys(typeStats);
+          this.chart.data.datasets[0].data = Object.values(typeStats);
+          this.chart.update();
         },
 
         renderItem(item) {
@@ -202,11 +255,12 @@
                   <div class="card-content">無符合條件的硬體</div>
                 </ion-card>
               `;
-              return;
+            } else {
+              filteredItems.forEach((item) => {
+                this.hardwareList.innerHTML += this.renderItem(item);
+              });
             }
-            filteredItems.forEach((item) => {
-              this.hardwareList.innerHTML += this.renderItem(item);
-            });
+            this.updateChart(filteredItems);
           } catch (error) {
             console.error("更新清單時發生錯誤:", error);
             this.hardwareList.innerHTML = `
@@ -294,7 +348,6 @@
           this.sortField.addEventListener("ionChange", () => this.applyFiltersAndSort());
           this.sortDirection.addEventListener("ionChange", () => this.applyFiltersAndSort());
 
-          // 視圖切換事件
           document.querySelector("#toggleListView").addEventListener("click", () => uiController.toggleView("list"));
           document.querySelector("#toggleGridView").addEventListener("click", () => uiController.toggleView("grid"));
         },
