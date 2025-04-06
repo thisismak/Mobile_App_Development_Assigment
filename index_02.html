@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
     <script src="https://unpkg.com/ionicons@latest/dist/ionicons.js"></script>
     <style>
-      /* 原有樣式保持不變 */
       .item-content { width: 100%; padding: 0.5rem; }
       .item-features { display: flex; align-items: center; color: #2a7de1; margin: 0.5rem 0; }
       .item-features ion-icon { margin-right: 0.5rem; font-size: 1.2em; color: #2a7de1; }
@@ -56,6 +55,17 @@
             <ion-select-option value="溫濕度">溫濕度</ion-select-option>
             <ion-select-option value="測距">測距</ion-select-option>
             <ion-select-option value="長距離">長距離</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>排序</ion-label>
+          <ion-select id="sortSelect" interface="popover" placeholder="選擇排序方式">
+            <ion-select-option value="name-asc">名稱 (A-Z)</ion-select-option>
+            <ion-select-option value="name-desc">名稱 (Z-A)</ion-select-option>
+            <ion-select-option value="type-asc">類型 (A-Z)</ion-select-option>
+            <ion-select-option value="type-desc">類型 (Z-A)</ion-select-option>
+            <ion-select-option value="features-asc">功能 (A-Z)</ion-select-option>
+            <ion-select-option value="features-desc">功能 (Z-A)</ion-select-option>
           </ion-select>
         </ion-item>
       </ion-header>
@@ -146,13 +156,15 @@
         searchBar: null,
         categorySelect: null,
         tagSelect: null,
+        sortSelect: null,
 
         init() {
           this.searchBar = document.querySelector("ion-searchbar");
           this.categorySelect = document.querySelector("ion-select");
           this.tagSelect = document.querySelector("#tagSelect");
-          if (!this.searchBar || !this.categorySelect || !this.tagSelect) 
-            throw new Error("搜尋、分類或標籤元件初始化失敗");
+          this.sortSelect = document.querySelector("#sortSelect");
+          if (!this.searchBar || !this.categorySelect || !this.tagSelect || !this.sortSelect) 
+            throw new Error("搜尋、分類、標籤或排序元件初始化失敗");
           hardwareData.filteredItems = [...hardwareData.items];
         },
 
@@ -169,30 +181,39 @@
           });
         },
 
+        sortItems(items, sortOption) {
+          if (!sortOption) return items;
+          const [field, direction] = sortOption.split("-");
+          const sortedItems = [...items];
+          
+          sortedItems.sort((a, b) => {
+            const valueA = a[field].toLowerCase();
+            const valueB = b[field].toLowerCase();
+            if (direction === "asc") {
+              return valueA.localeCompare(valueB);
+            } else {
+              return valueB.localeCompare(valueA);
+            }
+          });
+          return sortedItems;
+        },
+
+        applyFiltersAndSort() {
+          const query = this.searchBar.value || "";
+          const categories = this.categorySelect.value || [];
+          const tags = this.tagSelect.value || [];
+          const sortOption = this.sortSelect.value || "";
+          
+          let filteredItems = this.filterItems(query, categories, tags);
+          hardwareData.filteredItems = this.sortItems(filteredItems, sortOption);
+          uiController.updateList(hardwareData.filteredItems);
+        },
+
         bindEvents() {
-          this.searchBar.addEventListener("ionInput", (event) => {
-            const query = event.target.value || "";
-            const categories = this.categorySelect.value || [];
-            const tags = this.tagSelect.value || [];
-            hardwareData.filteredItems = this.filterItems(query, categories, tags);
-            uiController.updateList(hardwareData.filteredItems);
-          });
-
-          this.categorySelect.addEventListener("ionChange", (event) => {
-            const categories = event.target.value || [];
-            const query = this.searchBar.value || "";
-            const tags = this.tagSelect.value || [];
-            hardwareData.filteredItems = this.filterItems(query, categories, tags);
-            uiController.updateList(hardwareData.filteredItems);
-          });
-
-          this.tagSelect.addEventListener("ionChange", (event) => {
-            const tags = event.target.value || [];
-            const query = this.searchBar.value || "";
-            const categories = this.categorySelect.value || [];
-            hardwareData.filteredItems = this.filterItems(query, categories, tags);
-            uiController.updateList(hardwareData.filteredItems);
-          });
+          this.searchBar.addEventListener("ionInput", () => this.applyFiltersAndSort());
+          this.categorySelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
+          this.tagSelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
+          this.sortSelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
         },
       };
 
