@@ -54,15 +54,22 @@
         to { opacity: 1; transform: translateY(0); } 
       }
       .sort-direction { display: flex; gap: 1rem; margin-left: 1rem; }
-      @media (min-width: 768px) {
-        ion-content { 
-          display: grid; 
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-          gap: 1rem; 
-          padding: 1rem; 
-        }
-        ion-card { margin: 0; }
+      /* 列表視圖樣式 */
+      #hardwareList.list-view ion-card { 
+        width: 100%; 
+        max-width: 600px; 
+        margin: 1rem auto; 
       }
+      /* 網格視圖樣式 */
+      #hardwareList.grid-view { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+        gap: 1rem; 
+        padding: 1rem; 
+      }
+      #hardwareList.grid-view ion-card { margin: 0; }
+      /* 切換按鈕樣式 */
+      .view-toggle { margin-left: auto; padding-right: 1rem; }
     </style>
   </head>
   <body>
@@ -70,6 +77,14 @@
       <ion-header>
         <ion-toolbar color="primary">
           <ion-title>開源硬體清單</ion-title>
+          <ion-buttons slot="end" class="view-toggle">
+            <ion-button id="toggleListView">
+              <ion-icon name="list-outline"></ion-icon>
+            </ion-button>
+            <ion-button id="toggleGridView">
+              <ion-icon name="grid-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
         </ion-toolbar>
         <ion-searchbar placeholder="搜尋產品名稱或功能..." color="light"></ion-searchbar>
         <ion-item lines="none">
@@ -114,7 +129,7 @@
       </ion-header>
 
       <ion-content>
-        <div id="hardwareList"></div>
+        <div id="hardwareList" class="list-view"></div>
       </ion-content>
     </ion-app>
 
@@ -201,6 +216,16 @@
             `;
           }
         },
+
+        toggleView(view) {
+          if (view === "list") {
+            this.hardwareList.classList.remove("grid-view");
+            this.hardwareList.classList.add("list-view");
+          } else {
+            this.hardwareList.classList.remove("list-view");
+            this.hardwareList.classList.add("grid-view");
+          }
+        },
       };
 
       const filterController = {
@@ -268,6 +293,10 @@
           this.tagSelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
           this.sortField.addEventListener("ionChange", () => this.applyFiltersAndSort());
           this.sortDirection.addEventListener("ionChange", () => this.applyFiltersAndSort());
+
+          // 視圖切換事件
+          document.querySelector("#toggleListView").addEventListener("click", () => uiController.toggleView("list"));
+          document.querySelector("#toggleGridView").addEventListener("click", () => uiController.toggleView("grid"));
         },
       };
 
