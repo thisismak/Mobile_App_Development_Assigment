@@ -29,6 +29,7 @@
         .item-content { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
         ion-content { padding: 1rem; }
       }
+      .sort-direction { display: flex; gap: 1rem; margin-left: 1rem; }
     </style>
   </head>
   <body>
@@ -58,15 +59,24 @@
           </ion-select>
         </ion-item>
         <ion-item lines="none">
-          <ion-label>排序</ion-label>
-          <ion-select id="sortSelect" interface="popover" placeholder="選擇排序方式">
-            <ion-select-option value="name-asc">名稱 (A-Z)</ion-select-option>
-            <ion-select-option value="name-desc">名稱 (Z-A)</ion-select-option>
-            <ion-select-option value="type-asc">類型 (A-Z)</ion-select-option>
-            <ion-select-option value="type-desc">類型 (Z-A)</ion-select-option>
-            <ion-select-option value="features-asc">功能 (A-Z)</ion-select-option>
-            <ion-select-option value="features-desc">功能 (Z-A)</ion-select-option>
+          <ion-label>排序欄位</ion-label>
+          <ion-select id="sortField" interface="popover" placeholder="選擇排序欄位">
+            <ion-select-option value="name">名稱</ion-select-option>
+            <ion-select-option value="type">類型</ion-select-option>
+            <ion-select-option value="features">功能</ion-select-option>
           </ion-select>
+          <div class="sort-direction">
+            <ion-radio-group id="sortDirection" value="asc">
+              <ion-item lines="none">
+                <ion-label>升冪</ion-label>
+                <ion-radio slot="start" value="asc"></ion-radio>
+              </ion-item>
+              <ion-item lines="none">
+                <ion-label>降冪</ion-label>
+                <ion-radio slot="start" value="desc"></ion-radio>
+              </ion-item>
+            </ion-radio-group>
+          </div>
         </ion-item>
       </ion-header>
 
@@ -156,14 +166,16 @@
         searchBar: null,
         categorySelect: null,
         tagSelect: null,
-        sortSelect: null,
+        sortField: null,
+        sortDirection: null,
 
         init() {
           this.searchBar = document.querySelector("ion-searchbar");
           this.categorySelect = document.querySelector("ion-select");
           this.tagSelect = document.querySelector("#tagSelect");
-          this.sortSelect = document.querySelector("#sortSelect");
-          if (!this.searchBar || !this.categorySelect || !this.tagSelect || !this.sortSelect) 
+          this.sortField = document.querySelector("#sortField");
+          this.sortDirection = document.querySelector("#sortDirection");
+          if (!this.searchBar || !this.categorySelect || !this.tagSelect || !this.sortField || !this.sortDirection) 
             throw new Error("搜尋、分類、標籤或排序元件初始化失敗");
           hardwareData.filteredItems = [...hardwareData.items];
         },
@@ -181,9 +193,8 @@
           });
         },
 
-        sortItems(items, sortOption) {
-          if (!sortOption) return items;
-          const [field, direction] = sortOption.split("-");
+        sortItems(items, field, direction) {
+          if (!field || !direction) return items;
           const sortedItems = [...items];
           
           sortedItems.sort((a, b) => {
@@ -202,10 +213,11 @@
           const query = this.searchBar.value || "";
           const categories = this.categorySelect.value || [];
           const tags = this.tagSelect.value || [];
-          const sortOption = this.sortSelect.value || "";
+          const sortField = this.sortField.value || "";
+          const sortDirection = this.sortDirection.value || "asc";
           
           let filteredItems = this.filterItems(query, categories, tags);
-          hardwareData.filteredItems = this.sortItems(filteredItems, sortOption);
+          hardwareData.filteredItems = this.sortItems(filteredItems, sortField, sortDirection);
           uiController.updateList(hardwareData.filteredItems);
         },
 
@@ -213,7 +225,8 @@
           this.searchBar.addEventListener("ionInput", () => this.applyFiltersAndSort());
           this.categorySelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
           this.tagSelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
-          this.sortSelect.addEventListener("ionChange", () => this.applyFiltersAndSort());
+          this.sortField.addEventListener("ionChange", () => this.applyFiltersAndSort());
+          this.sortDirection.addEventListener("ionChange", () => this.applyFiltersAndSort());
         },
       };
 
