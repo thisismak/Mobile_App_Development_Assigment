@@ -9,27 +9,60 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
     <script src="https://unpkg.com/ionicons@latest/dist/ionicons.js"></script>
     <style>
-      .item-content { width: 100%; padding: 0.5rem; }
-      .item-features { display: flex; align-items: center; color: #2a7de1; margin: 0.5rem 0; }
-      .item-features ion-icon { margin-right: 0.5rem; font-size: 1.2em; color: #2a7de1; }
-      .item-description { display: flex; align-items: center; color: #555; margin: 0.5rem 0; }
-      .item-description ion-icon { margin-right: 0.5rem; font-size: 1.2em; color: #555; }
-      .item-title { font-weight: bold; margin: 0.25rem 0; font-size: 1.2em; }
-      .item-subtitle { color: var(--ion-color-medium); font-size: 0.9em; }
-      .tag-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-      .item-image { max-width: 100%; height: auto; max-height: 200px; border-radius: 8px; }
-      .item-video { max-width: 100%; height: auto; max-height: 200px; border-radius: 8px; }
-      ion-item { opacity: 0; animation: fadeIn 0.3s ease-in forwards; }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      @media (min-width: 768px) and (max-width: 1024px) {
-        .item-content { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 1.1em; }
-        .item-image, .item-video { max-height: 180px; }
+      ion-card { 
+        margin: 1rem; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        border-radius: 8px; 
+        overflow: hidden; 
+        animation: fadeIn 0.3s ease-in forwards; 
       }
-      @media (min-width: 1025px) {
-        .item-content { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
-        ion-content { padding: 1rem; }
+      .card-content { padding: 1rem; }
+      .item-title { font-weight: bold; font-size: 1.2em; margin-bottom: 0.5rem; }
+      .item-subtitle { color: var(--ion-color-medium); font-size: 0.9em; margin-bottom: 0.5rem; }
+      .item-features { 
+        display: flex; 
+        align-items: center; 
+        color: #2a7de1; 
+        margin: 0.5rem 0; 
+        font-size: 0.95em; 
+      }
+      .item-features ion-icon { margin-right: 0.5rem; font-size: 1.2em; color: #2a7de1; }
+      .item-description { 
+        display: flex; 
+        align-items: center; 
+        color: #555; 
+        margin: 0.5rem 0; 
+        font-size: 0.95em; 
+      }
+      .item-description ion-icon { margin-right: 0.5rem; font-size: 1.2em; color: #555; }
+      .tag-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+      .item-image { 
+        width: 100%; 
+        height: auto; 
+        max-height: 200px; 
+        object-fit: cover; 
+        border-bottom: 1px solid #eee; 
+      }
+      .item-video { 
+        width: 100%; 
+        height: 200px; 
+        border: none; 
+        margin-top: 0.5rem; 
+      }
+      @keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(10px); } 
+        to { opacity: 1; transform: translateY(0); } 
       }
       .sort-direction { display: flex; gap: 1rem; margin-left: 1rem; }
+      @media (min-width: 768px) {
+        ion-content { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+          gap: 1rem; 
+          padding: 1rem; 
+        }
+        ion-card { margin: 0; }
+      }
     </style>
   </head>
   <body>
@@ -81,7 +114,7 @@
       </ion-header>
 
       <ion-content>
-        <ion-list id="hardwareList"></ion-list>
+        <div id="hardwareList"></div>
       </ion-content>
     </ion-app>
 
@@ -122,24 +155,26 @@
 
         renderItem(item) {
           return `
-            <div class="item-content">
-              <div class="item-title">${item.name}</div>
-              <div class="item-subtitle">${item.type}</div>
-              <div class="item-features">
-                <ion-icon name="cog-outline"></ion-icon>
-                <strong>功能：</strong>${item.features}
-              </div>
-              <div class="item-description">
-                <ion-icon name="information-circle-outline"></ion-icon>
-                <strong>說明：</strong>${item.description}
-              </div>
+            <ion-card>
               <img class="item-image" src="${item.imageUrl}" alt="${item.name}" />
-              <iframe class="item-video" src="${item.videoUrl}" frameborder="0" allowfullscreen></iframe>
-              <div class="tag-container">
-                <ion-chip size="small">${item.type}</ion-chip>
-                ${item.features.split("，").map(feature => `<ion-chip size="small">${feature.trim()}</ion-chip>`).join("")}
+              <div class="card-content">
+                <div class="item-title">${item.name}</div>
+                <div class="item-subtitle">${item.type}</div>
+                <div class="item-features">
+                  <ion-icon name="cog-outline"></ion-icon>
+                  <strong>功能：</strong>${item.features}
+                </div>
+                <div class="item-description">
+                  <ion-icon name="information-circle-outline"></ion-icon>
+                  <strong>說明：</strong>${item.description}
+                </div>
+                <div class="tag-container">
+                  <ion-chip size="small">${item.type}</ion-chip>
+                  ${item.features.split("，").map(feature => `<ion-chip size="small">${feature.trim()}</ion-chip>`).join("")}
+                </div>
+                <iframe class="item-video" src="${item.videoUrl}" frameborder="0" allowfullscreen></iframe>
               </div>
-            </div>
+            </ion-card>
           `;
         },
 
@@ -147,17 +182,23 @@
           try {
             this.hardwareList.innerHTML = "";
             if (filteredItems.length === 0) {
-              this.hardwareList.innerHTML = '<ion-item>無符合條件的硬體</ion-item>';
+              this.hardwareList.innerHTML = `
+                <ion-card>
+                  <div class="card-content">無符合條件的硬體</div>
+                </ion-card>
+              `;
               return;
             }
             filteredItems.forEach((item) => {
-              const ionItem = document.createElement("ion-item");
-              ionItem.innerHTML = this.renderItem(item);
-              this.hardwareList.appendChild(ionItem);
+              this.hardwareList.innerHTML += this.renderItem(item);
             });
           } catch (error) {
             console.error("更新清單時發生錯誤:", error);
-            this.hardwareList.innerHTML = '<ion-item>顯示清單時發生錯誤</ion-item>';
+            this.hardwareList.innerHTML = `
+              <ion-card color="danger">
+                <div class="card-content">顯示清單時發生錯誤</div>
+              </ion-card>
+            `;
           }
         },
       };
@@ -238,9 +279,9 @@
       } catch (error) {
         console.error("應用程式初始化失敗:", error);
         document.querySelector("ion-content").innerHTML = `
-          <ion-item color="danger">
-            <ion-label>應用程式載入失敗，請重新整理</ion-label>
-          </ion-item>
+          <ion-card color="danger">
+            <div class="card-content">應用程式載入失敗，請重新整理</div>
+          </ion-card>
         `;
       }
     </script>
